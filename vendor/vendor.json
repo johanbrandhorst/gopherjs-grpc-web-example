@@ -1,6 +1,6 @@
 {
 	"comment": "",
-	"ignore": "test",
+	"ignore": "test github.com/gopherjs/gopherjs/js",
 	"package": [
 		{
 			"checksumSHA1": "ZKxETlJdB2XubMrZnXB0FQimVA8=",
