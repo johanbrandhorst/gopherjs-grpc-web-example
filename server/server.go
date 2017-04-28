@@ -1,3 +1,6 @@
+// Copyright 2017 Johan Brandhorst. All Rights Reserved.
+// See LICENSE for licensing terms.
+
 package server
 
 import (
