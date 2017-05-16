@@ -9,7 +9,6 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
 
 	"github.com/johanbrandhorst/gopherjs-grpc-web-example/server/proto/library"
 )
@@ -40,8 +39,8 @@ var books = []*library.Book{
 }
 
 func (s *BookService) GetBook(ctx context.Context, bookQuery *library.GetBookRequest) (*library.Book, error) {
-	grpc.SendHeader(ctx, metadata.Pairs("Pre-Response-Metadata", "Is-sent-as-headers-unary"))
-	grpc.SetTrailer(ctx, metadata.Pairs("Post-Response-Metadata", "Is-sent-as-trailers-unary"))
+	//grpc.SendHeader(ctx, metadata.Pairs("Pre-Response-Metadata", "Is-sent-as-headers-unary"))
+	//grpc.SetTrailer(ctx, metadata.Pairs("Post-Response-Metadata", "Is-sent-as-trailers-unary"))
 
 	for _, book := range books {
 		if book.Isbn == bookQuery.Isbn {
@@ -53,12 +52,12 @@ func (s *BookService) GetBook(ctx context.Context, bookQuery *library.GetBookReq
 }
 
 func (s *BookService) QueryBooks(bookQuery *library.QueryBooksRequest, stream library.BookService_QueryBooksServer) error {
-	stream.SendHeader(metadata.Pairs("Pre-Response-Metadata", "Is-sent-as-headers-stream"))
+	//stream.SendHeader(metadata.Pairs("Pre-Response-Metadata", "Is-sent-as-headers-stream"))
 	for _, book := range books {
 		if strings.HasPrefix(book.Author, bookQuery.AuthorPrefix) {
 			stream.Send(book)
 		}
 	}
-	stream.SetTrailer(metadata.Pairs("Post-Response-Metadata", "Is-sent-as-trailers-stream"))
+	//stream.SetTrailer(metadata.Pairs("Post-Response-Metadata", "Is-sent-as-trailers-stream"))
 	return nil
 }

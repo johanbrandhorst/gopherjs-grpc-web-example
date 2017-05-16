@@ -9,7 +9,6 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	assetfs "github.com/elazarl/go-bindata-assetfs"
-	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
 
@@ -21,11 +20,12 @@ import (
 var logger *logrus.Logger
 
 // If you change this, you'll need to change the cert as well
-const addr = "localhost:10000"
+const gRPCAddr = "0.0.0.0:8081"
+const staticAddr = "0.0.0.0:8080"
 
 func init() {
 	logger = logrus.StandardLogger()
-	logrus.SetLevel(logrus.InfoLevel)
+	logrus.SetLevel(logrus.DebugLevel)
 	logrus.SetFormatter(&logrus.TextFormatter{
 		ForceColors:     true,
 		FullTimestamp:   true,
@@ -39,24 +39,23 @@ func main() {
 	gs := grpc.NewServer()
 	library.RegisterBookServiceServer(gs, &server.BookService{})
 
-	wrappedServer := grpcweb.WrapServer(gs)
-	handler := func(resp http.ResponseWriter, req *http.Request) {
-		if wrappedServer.IsGrpcWebRequest(req) {
-			wrappedServer.ServeHttp(resp, req)
-		} else {
-			// Serve the GopherJS client
-			http.FileServer(&assetfs.AssetFS{
-				Asset:     compiled.Asset,
-				AssetDir:  compiled.AssetDir,
-				AssetInfo: compiled.AssetInfo,
-			}).ServeHTTP(resp, req)
-		}
-	}
-	httpServer := http.Server{
-		Addr:    addr,
-		Handler: http.HandlerFunc(handler),
+	gRPCServer := http.Server{
+		Addr:    gRPCAddr,
+		Handler: gs,
 	}
 
-	logger.Warn("Serving on https://", addr)
-	logger.Fatal(httpServer.ListenAndServeTLS("./insecure/localhost.crt", "./insecure/localhost.key"))
+	staticServer := http.Server{
+		Addr: staticAddr,
+		Handler: http.FileServer(&assetfs.AssetFS{
+			Asset:     compiled.Asset,
+			AssetDir:  compiled.AssetDir,
+			AssetInfo: compiled.AssetInfo,
+		}),
+	}
+
+	logger.Warn("Serving gRPC on http://", gRPCAddr)
+	go gRPCServer.ListenAndServe()
+
+	logger.Warn("Serving static on http://", staticAddr)
+	logger.Fatal(staticServer.ListenAndServe())
 }
